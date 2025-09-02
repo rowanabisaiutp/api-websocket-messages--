@@ -1,0 +1,72 @@
+{
+  "description": "Ejemplos de datos para probar la API de contact_messages",
+  "examples": [
+    {
+      "name": "Juan Pérez",
+      "email": "juan.perez@email.com",
+      "subject": "Consulta sobre productos",
+      "message": "Hola, me interesa saber más información sobre sus productos y servicios. ¿Podrían contactarme?"
+    },
+    {
+      "name": "María García",
+      "email": "maria.garcia@empresa.com",
+      "subject": "Soporte técnico",
+      "message": "Necesito ayuda con mi cuenta. No puedo acceder a la plataforma desde ayer."
+    },
+    {
+      "name": "Carlos López",
+      "email": "carlos.lopez@gmail.com",
+      "subject": "Propuesta de colaboración",
+      "message": "Somos una empresa interesada en establecer una alianza comercial. ¿Podríamos agendar una reunión?"
+    },
+    {
+      "name": "Ana Martínez",
+      "email": "ana.martinez@hotmail.com",
+      "subject": "Información de precios",
+      "message": "Buenos días, me gustaría recibir información detallada sobre los precios de sus servicios."
+    },
+    {
+      "name": "Roberto Silva",
+      "email": "roberto.silva@yahoo.com",
+      "subject": "Problema con facturación",
+      "message": "He detectado un error en mi última factura. El monto no coincide con lo acordado."
+    },
+    {
+      "name": "Laura Rodríguez",
+      "email": "laura.rodriguez@outlook.com",
+      "subject": "Solicitud de cotización",
+      "message": "Necesito una cotización para un proyecto que incluye 50 usuarios y 6 meses de servicio."
+    },
+    {
+      "name": "Miguel Torres",
+      "email": "miguel.torres@empresa.org",
+      "subject": "Feedback sobre el servicio",
+      "message": "Quería felicitarlos por el excelente servicio. La atención al cliente ha sido excepcional."
+    },
+    {
+      "name": "Sofía Herrera",
+      "email": "sofia.herrera@universidad.edu",
+      "subject": "Consulta académica",
+      "message": "Soy estudiante de ingeniería y me gustaría información sobre oportunidades de prácticas en su empresa."
+    },
+    {
+      "name": "Diego Morales",
+      "email": "diego.morales@startup.com",
+      "subject": "Partnership tecnológico",
+      "message": "Tenemos una startup que podría complementar perfectamente sus servicios. ¿Les interesa conocer más?"
+    },
+    {
+      "name": "Valentina Cruz",
+      "email": "valentina.cruz@consultora.com",
+      "subject": "Servicios de consultoría",
+      "message": "Ofrecemos servicios de consultoría en digitalización. ¿Podríamos presentarles nuestra propuesta?"
+    }
+  ],
+  "curl_examples": {
+    "create_contact": "curl -X POST http://localhost:3000/api/contacts -H \"Content-Type: application/json\" -d '{\"name\": \"Juan Pérez\", \"email\": \"juan.perez@email.com\", \"subject\": \"Consulta sobre productos\", \"message\": \"Hola, me interesa saber más información sobre sus productos y servicios.\"}'",
+    "get_all_contacts": "curl http://localhost:3000/api/contacts",
+    "get_contact_by_id": "curl http://localhost:3000/api/contacts/1",
+    "update_contact": "curl -X PUT http://localhost:3000/api/contacts/1 -H \"Content-Type: application/json\" -d '{\"name\": \"Juan Pérez\", \"email\": \"juan.perez@email.com\", \"subject\": \"Consulta actualizada\", \"message\": \"Mensaje actualizado...\"}'",
+    "delete_contact": "curl -X DELETE http://localhost:3000/api/contacts/1"
+  }
+}
