@@ -3,14 +3,14 @@ const authorizedProjects = {
   'proj_abc123def456_project1': {
     name: 'Proyecto Web Principal',
     domain: 'mi-proyecto-web.com',
-    allowedOrigins: ['https://mi-proyecto-web.com', 'https://www.mi-proyecto-web.com'],
+    allowedOrigins: ['https://api-websocket-messages.vercel.app', 'https://api-websocket-messages.vercel.app'],
     rateLimit: { requests: 1000, window: '1h' },
     features: ['read', 'write', 'delete']
   },
   'proj_xyz789ghi012_project2': {
     name: 'Aplicación Móvil',
     domain: 'mi-app-movil.com',
-    allowedOrigins: ['https://mi-app-movil.com', 'https://app.mi-app-movil.com'],
+    allowedOrigins: ['https://api-websocket-messages.vercel.app', 'https://api-websocket-messages.vercel.app'],
     rateLimit: { requests: 500, window: '1h' },
     features: ['read', 'write']
   }
@@ -42,7 +42,9 @@ const authenticateProject = (req, res, next) => {
   
   // Validar origen (opcional, para mayor seguridad)
   if (origin && project.allowedOrigins.length > 0) {
-    const isAllowedOrigin = project.allowedOrigins.some(allowedOrigin => 
+    // Permitir archivos locales y localhost para desarrollo
+    const isLocalFile = origin === 'null' || origin === 'file://' || origin.includes('localhost') || origin.includes('127.0.0.1');
+    const isAllowedOrigin = isLocalFile || project.allowedOrigins.some(allowedOrigin => 
       origin.includes(allowedOrigin.replace('https://', '').replace('http://', ''))
     );
     
@@ -51,7 +53,8 @@ const authenticateProject = (req, res, next) => {
         success: false,
         message: 'Origin not allowed for this project',
         yourOrigin: origin,
-        allowedOrigins: project.allowedOrigins
+        allowedOrigins: project.allowedOrigins,
+        note: 'Local files and localhost are allowed for development'
       });
     }
   }
