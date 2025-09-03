@@ -1,32 +1,105 @@
-const validApiKeys = new Set([
-  'sk-1234567890abcdef-user1',
-  'sk-0987654321fedcba-user2'
-]);
+// Proyectos autorizados con sus configuraciones
+const authorizedProjects = {
+  'proj_abc123def456_project1': {
+    name: 'Proyecto Web Principal',
+    domain: 'mi-proyecto-web.com',
+    allowedOrigins: ['https://mi-proyecto-web.com', 'https://www.mi-proyecto-web.com'],
+    rateLimit: { requests: 1000, window: '1h' },
+    features: ['read', 'write', 'delete']
+  },
+  'proj_xyz789ghi012_project2': {
+    name: 'Aplicación Móvil',
+    domain: 'mi-app-movil.com',
+    allowedOrigins: ['https://mi-app-movil.com', 'https://app.mi-app-movil.com'],
+    rateLimit: { requests: 500, window: '1h' },
+    features: ['read', 'write']
+  }
+};
 
-const authenticateApiKey = (req, res, next) => {
+// Rate limiting por proyecto
+const projectRequests = new Map();
+
+const authenticateProject = (req, res, next) => {
   const apiKey = req.headers['x-api-key'] || req.headers['authorization']?.replace('Bearer ', '');
+  const origin = req.headers['origin'] || req.headers['referer'];
   
   if (!apiKey) {
     return res.status(401).json({
       success: false,
-      message: 'API key required. Include x-api-key header or Authorization: Bearer <key>'
+      message: 'Project API key required. Include x-api-key header or Authorization: Bearer <key>',
+      documentation: 'Contact admin to get your project API key'
     });
   }
   
-  if (!validApiKeys.has(apiKey)) {
+  const project = authorizedProjects[apiKey];
+  if (!project) {
     return res.status(403).json({
       success: false,
-      message: 'Invalid API key'
+      message: 'Invalid project API key',
+      hint: 'This API key is not authorized for any project'
     });
   }
   
-  // Agregar info del usuario al request
-  req.user = {
-    id: apiKey === 'sk-1234567890abcdef-user1' ? 'user1' : 'user2',
-    apiKey: apiKey
+  // Validar origen (opcional, para mayor seguridad)
+  if (origin && project.allowedOrigins.length > 0) {
+    const isAllowedOrigin = project.allowedOrigins.some(allowedOrigin => 
+      origin.includes(allowedOrigin.replace('https://', '').replace('http://', ''))
+    );
+    
+    if (!isAllowedOrigin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Origin not allowed for this project',
+        yourOrigin: origin,
+        allowedOrigins: project.allowedOrigins
+      });
+    }
+  }
+  
+  // Rate limiting
+  const now = Date.now();
+  const windowMs = getWindowMs(project.rateLimit.window);
+  const projectKey = `${apiKey}_${Math.floor(now / windowMs)}`;
+  
+  const currentRequests = projectRequests.get(projectKey) || 0;
+  if (currentRequests >= project.rateLimit.requests) {
+    return res.status(429).json({
+      success: false,
+      message: 'Rate limit exceeded for this project',
+      limit: project.rateLimit.requests,
+      window: project.rateLimit.window,
+      resetTime: new Date(Math.ceil(now / windowMs) * windowMs).toISOString()
+    });
+  }
+  
+  projectRequests.set(projectKey, currentRequests + 1);
+  
+  // Agregar info del proyecto al request
+  req.project = {
+    id: apiKey,
+    name: project.name,
+    domain: project.domain,
+    features: project.features,
+    rateLimit: project.rateLimit
   };
   
   next();
 };
 
-module.exports = { authenticateApiKey };
+// Función auxiliar para convertir ventana de tiempo a milisegundos
+function getWindowMs(window) {
+  const units = {
+    's': 1000,
+    'm': 60 * 1000,
+    'h': 60 * 60 * 1000,
+    'd': 24 * 60 * 60 * 1000
+  };
+  
+  const match = window.match(/^(\d+)([smhd])$/);
+  if (!match) return 60 * 60 * 1000; // Default 1 hour
+  
+  const [, amount, unit] = match;
+  return parseInt(amount) * units[unit];
+}
+
+module.exports = { authenticateProject, authorizedProjects };

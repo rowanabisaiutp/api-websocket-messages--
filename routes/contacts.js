@@ -1,5 +1,6 @@
 const express = require('express');
 const Contact = require('../models/Contact');
+const { checkFeature } = require('../middleware/featureAuth');
 const router = express.Router();
 
 // GET /api/contacts - Get all contact messages
@@ -29,7 +30,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/contacts - Create new contact message
-router.post('/', async (req, res) => {
+router.post('/', checkFeature('write'), async (req, res) => {
   try {
     const { name, email, subject, message } = req.body;
     
@@ -51,7 +52,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/contacts/:id - Update contact message
-router.put('/:id', async (req, res) => {
+router.put('/:id', checkFeature('write'), async (req, res) => {
   try {
     const { id } = req.params;
     const { name, email, subject, message } = req.body;
@@ -84,7 +85,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/contacts/:id - Delete contact message
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', checkFeature('delete'), async (req, res) => {
   try {
     const { id } = req.params;
     

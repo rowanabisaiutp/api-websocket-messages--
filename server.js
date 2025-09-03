@@ -4,7 +4,7 @@ require('dotenv').config();
 
 const contactRoutes = require('./routes/contacts');
 
-const { authenticateApiKey } = require('./middleware/auth');
+const { authenticateProject, authorizedProjects } = require('./middleware/auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,8 +14,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes (protegidas con API Key)
-app.use('/api/contacts', authenticateApiKey, contactRoutes);
+// Routes (protegidas por proyecto)
+app.use('/api/contacts', authenticateProject, contactRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -26,8 +26,8 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Endpoint para obtener API Keys (solo para administradores)
-app.get('/api/keys', (req, res) => {
+// Endpoint para obtener información de proyectos (solo para administradores)
+app.get('/api/projects', (req, res) => {
   const adminKey = req.headers['x-admin-key'];
   if (adminKey !== process.env.ADMIN_KEY) {
     return res.status(403).json({
@@ -36,14 +36,35 @@ app.get('/api/keys', (req, res) => {
     });
   }
   
+  const projectInfo = Object.entries(authorizedProjects).map(([key, config]) => ({
+    projectId: key,
+    name: config.name,
+    domain: config.domain,
+    allowedOrigins: config.allowedOrigins,
+    rateLimit: config.rateLimit,
+    features: config.features
+  }));
+  
   res.json({
     success: true,
-    message: 'API Keys for authorized users',
-    keys: [
-      { user: 'user1', key: 'sk-1234567890abcdef-user1' },
-      { user: 'user2', key: 'sk-0987654321fedcba-user2' }
-    ],
-    usage: 'Include header: x-api-key: YOUR_KEY'
+    message: 'Authorized projects information',
+    projects: projectInfo,
+    usage: 'Include header: x-api-key: PROJECT_KEY'
+  });
+});
+
+// Endpoint para verificar estado del proyecto
+app.get('/api/project/status', authenticateProject, (req, res) => {
+  res.json({
+    success: true,
+    message: 'Project authenticated successfully',
+    project: {
+      name: req.project.name,
+      domain: req.project.domain,
+      features: req.project.features,
+      rateLimit: req.project.rateLimit
+    },
+    timestamp: new Date().toISOString()
   });
 });
 
