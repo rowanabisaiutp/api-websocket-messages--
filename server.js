@@ -3,6 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const contactRoutes = require('./routes/contacts');
+
 const { authenticateApiKey } = require('./middleware/auth');
 
 const app = express();
