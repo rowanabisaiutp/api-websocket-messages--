@@ -6,7 +6,7 @@ const authorizedProjects = {
     allowedOrigins: ['https://api-websocket-messages.vercel.app', 'https://api-websocket-messages.vercel.app'],
     rateLimit: { requests: 1000, window: '1h' },
     features: ['read', 'write', 'delete']
-  },
+  },  
   'proj_xyz789ghi012_project2': {
     name: 'Aplicación Móvil',
     domain: 'mi-app-movil.com',

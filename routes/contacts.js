@@ -45,6 +45,31 @@ router.post('/', checkFeature('write'), async (req, res) => {
     const contactId = await Contact.create({ name, email, subject, message });
     const newContact = await Contact.findById(contactId);
     
+    // Emitir evento en tiempo real a todos los clientes conectados
+    const io = req.app.get('io') || global.io;
+    console.log('🔍 Debug Socket.IO:', {
+      hasIO: !!io,
+      ioFromApp: !!req.app.get('io'),
+      globalIO: !!global.io,
+      project: req.project?.name || 'Unknown'
+    });
+    
+    if (io) {
+      const eventData = {
+        success: true,
+        data: newContact,
+        message: 'Nuevo mensaje de contacto recibido',
+        timestamp: new Date().toISOString(),
+        project: req.project?.name || 'Unknown'
+      };
+      
+      console.log('📡 Emitiendo evento new-contact:', eventData);
+      io.to('contacts-room').emit('new-contact', eventData);
+      console.log('✅ Evento new-contact emitido exitosamente');
+    } else {
+      console.log('❌ Socket.IO no disponible - no se puede emitir evento');
+    }
+    
     res.status(201).json({ success: true, data: newContact, message: 'Contact message created successfully' });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Error creating contact', error: error.message });
@@ -98,6 +123,18 @@ router.delete('/:id', checkFeature('delete'), async (req, res) => {
     const deleted = await Contact.delete(id);
     
     if (deleted) {
+      // Emitir evento en tiempo real
+      const io = req.app.get('io') || global.io;
+      if (io) {
+        io.to('contacts-room').emit('contact-deleted', {
+          success: true,
+          contactId: id,
+          message: 'Mensaje de contacto eliminado',
+          timestamp: new Date().toISOString(),
+          project: req.project?.name || 'Unknown'
+        });
+      }
+      
       res.json({ success: true, message: 'Contact message deleted successfully' });
     } else {
       res.status(500).json({ success: false, message: 'Failed to delete contact message' });
